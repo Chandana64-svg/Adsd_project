@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <title>Book Appointment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>Book an Appointment</h1>
-        <form method="POST" action="/book">
-            <input type="text" name="name" placeholder="Your Name" required><br>
-            <input type="email" name="email" placeholder="Email Address" required><br>
-            <input type="text" name="service" placeholder="Service (e.g., Doctor, Salon)" required><br>
-            <input type="date" name="date" required><br>
-            <input type="time" name="time" required><br>
-            <button type="submit">Book Appointment</button>
-        </form>
-        <a href="/appointments">View Appointments</a>
-    </div>
+<div class="container">
+    <h1>Book an Appointment</h1>
+    <form method="POST" action="/book">
+        <input type="text" name="name" placeholder="Your Name" required>
+        <input type="email" name="email" placeholder="Email Address" required>
+        <input type="text" name="service" placeholder="Service (e.g., Doctor, Salon)" required>
+        <input type="date" name="date" required>
+        <input type="time" name="time" required>
+        <button type="submit">Book Appointment</button>
+    </form>
+    <a href="/appointments">View Appointments</a>
+</div>
 </body>
 </html>
