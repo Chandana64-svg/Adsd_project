@@ -3,7 +3,6 @@ import sqlite3
 
 app = Flask(__name__)
 
-# DB initialization
 def init_db():
     with sqlite3.connect('appointments.db') as conn:
         conn.execute('''
@@ -24,15 +23,15 @@ def index():
 
 @app.route('/book', methods=['POST'])
 def book():
-    name = request.form['name']
-    email = request.form['email']
-    service = request.form['service']
-    date = request.form['date']
-    time = request.form['time']
-
+    data = (
+        request.form['name'],
+        request.form['email'],
+        request.form['service'],
+        request.form['date'],
+        request.form['time']
+    )
     with sqlite3.connect('appointments.db') as conn:
-        conn.execute('INSERT INTO appointments (name, email, service, date, time) VALUES (?, ?, ?, ?, ?)',
-                     (name, email, service, date, time))
+        conn.execute('INSERT INTO appointments (name, email, service, date, time) VALUES (?, ?, ?, ?, ?)', data)
     return redirect(url_for('appointments'))
 
 @app.route('/appointments')
@@ -42,6 +41,37 @@ def appointments():
         cursor.execute('SELECT * FROM appointments')
         data = cursor.fetchall()
     return render_template('appointments.html', appointments=data)
+
+@app.route('/edit/<int:id>', methods=['GET', 'POST'])
+def edit(id):
+    if request.method == 'POST':
+        updated = (
+            request.form['name'],
+            request.form['email'],
+            request.form['service'],
+            request.form['date'],
+            request.form['time'],
+            id
+        )
+        with sqlite3.connect('appointments.db') as conn:
+            conn.execute('''
+                UPDATE appointments 
+                SET name=?, email=?, service=?, date=?, time=? 
+                WHERE id=?
+            ''', updated)
+        return redirect(url_for('appointments'))
+    
+    with sqlite3.connect('appointments.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM appointments WHERE id=?', (id,))
+        appointment = cursor.fetchone()
+    return render_template('edit.html', appointment=appointment)
+
+@app.route('/delete/<int:id>')
+def delete(id):
+    with sqlite3.connect('appointments.db') as conn:
+        conn.execute('DELETE FROM appointments WHERE id=?', (id,))
+    return redirect(url_for('appointments'))
 
 if __name__ == '__main__':
     app.run(debug=True)
