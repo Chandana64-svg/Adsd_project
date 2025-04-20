@@ -1,8 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key_here'  # Required for flashing messages
 
+# Initialize the database
 def init_db():
     with sqlite3.connect('appointments.db') as conn:
         conn.execute('''
@@ -32,6 +34,8 @@ def book():
     )
     with sqlite3.connect('appointments.db') as conn:
         conn.execute('INSERT INTO appointments (name, email, service, date, time) VALUES (?, ?, ?, ?, ?)', data)
+
+    flash('✅ Appointment booked successfully!')
     return redirect(url_for('appointments'))
 
 @app.route('/appointments')
@@ -59,8 +63,9 @@ def edit(id):
                 SET name=?, email=?, service=?, date=?, time=? 
                 WHERE id=?
             ''', updated)
+        flash('✏️ Appointment updated successfully!')
         return redirect(url_for('appointments'))
-    
+
     with sqlite3.connect('appointments.db') as conn:
         cursor = conn.cursor()
         cursor.execute('SELECT * FROM appointments WHERE id=?', (id,))
@@ -71,6 +76,7 @@ def edit(id):
 def delete(id):
     with sqlite3.connect('appointments.db') as conn:
         conn.execute('DELETE FROM appointments WHERE id=?', (id,))
+    flash('🗑️ Appointment deleted successfully!')
     return redirect(url_for('appointments'))
 
 if __name__ == '__main__':
