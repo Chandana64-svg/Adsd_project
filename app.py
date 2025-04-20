@@ -1,10 +1,21 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_mail import Mail, Message
 import sqlite3
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'  # Required for flashing messages
+app.secret_key = 'your_secret_key_here'
 
-# Initialize the database
+# Mail configuration (example: Gmail SMTP)
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'your_email@gmail.com'  # <-- your email
+app.config['MAIL_PASSWORD'] = 'your_app_password'     # <-- your app password
+app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
+
+mail = Mail(app)
+
+# Initialize DB
 def init_db():
     with sqlite3.connect('appointments.db') as conn:
         conn.execute('''
@@ -25,17 +36,22 @@ def index():
 
 @app.route('/book', methods=['POST'])
 def book():
-    data = (
-        request.form['name'],
-        request.form['email'],
-        request.form['service'],
-        request.form['date'],
-        request.form['time']
-    )
-    with sqlite3.connect('appointments.db') as conn:
-        conn.execute('INSERT INTO appointments (name, email, service, date, time) VALUES (?, ?, ?, ?, ?)', data)
+    name = request.form['name']
+    email = request.form['email']
+    service = request.form['service']
+    date = request.form['date']
+    time = request.form['time']
 
-    flash('✅ Appointment booked successfully!')
+    with sqlite3.connect('appointments.db') as conn:
+        conn.execute('INSERT INTO appointments (name, email, service, date, time) VALUES (?, ?, ?, ?, ?)',
+                     (name, email, service, date, time))
+
+    # Send email confirmation
+    msg = Message("Appointment Confirmation", recipients=[email])
+    msg.body = f"Hello {name},\n\nYour appointment for '{service}' has been successfully booked on {date} at {time}.\n\nThank you!"
+    mail.send(msg)
+
+    flash('✅ Appointment booked successfully! A confirmation email has been sent.')
     return redirect(url_for('appointments'))
 
 @app.route('/appointments')
