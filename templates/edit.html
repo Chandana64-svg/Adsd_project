@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Edit Appointment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
 <div class="container">
     <h1>Edit Appointment</h1>
     <form method="POST">
-        <input type="text" name="name" value="{{ appointment[1] }}" required><br>
-        <input type="email" name="email" value="{{ appointment[2] }}" required><br>
-        <input type="text" name="service" value="{{ appointment[3] }}" required><br>
-        <input type="date" name="date" value="{{ appointment[4] }}" required><br>
-        <input type="time" name="time" value="{{ appointment[5] }}" required><br>
+        <input type="text" name="name" value="{{ appointment[1] }}" required>
+        <input type="email" name="email" value="{{ appointment[2] }}" required>
+        <input type="text" name="service" value="{{ appointment[3] }}" required>
+        <input type="date" name="date" value="{{ appointment[4] }}" required>
+        <input type="time" name="time" value="{{ appointment[5] }}" required>
         <button type="submit">Update</button>
     </form>
     <a href="/appointments">← Back to Appointments</a>
