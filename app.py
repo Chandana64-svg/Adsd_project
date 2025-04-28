@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_mail import Mail, Message
 import sqlite3
+import csv
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
@@ -10,7 +11,7 @@ app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'ummadireddyvinithanjali@gmail.com'  # <-- your email
-app.config['MAIL_PASSWORD'] = 'udfvnhitqafmizzg'     # <-- your app password
+app.config['MAIL_PASSWORD'] = 'udfvnhitqafmlzzg'     # <-- your app password
 app.config['MAIL_DEFAULT_SENDER'] = 'ummadireddyvinithanjali@gmail.com'
 
 mail = Mail(app)
@@ -18,17 +19,16 @@ mail = Mail(app)
 # Initialize DB
 def init_db():
     with sqlite3.connect('appointments.db') as conn:
-        conn.execute('''
+        conn.execute(''' 
             CREATE TABLE IF NOT EXISTS appointments (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 email TEXT NOT NULL,
-                service TEXT NOT NULL,
+                doctor TEXT NOT NULL,
                 date TEXT NOT NULL,
                 time TEXT NOT NULL
             );
         ''')
-init_db()
 
 # Function to import data from CSV to SQLite
 def import_csv_to_db():
@@ -38,15 +38,14 @@ def import_csv_to_db():
         
         with sqlite3.connect('appointments.db') as conn:
             for row in csv_reader:
-                name, email, service, date, time = row
+                name, email, doctor, date, time = row
                 conn.execute('''
-                    INSERT INTO appointments (name, email, service, date, time)
+                    INSERT INTO appointments (name, email, doctor, date, time)
                     VALUES (?, ?, ?, ?, ?)
                 ''', (name, email, doctor, date, time))
 
 # Import the CSV data into the database (you can call this once or trigger it as needed)
 import_csv_to_db()
-
 
 @app.route('/')
 def index():
@@ -56,20 +55,20 @@ def index():
 def book():
     name = request.form['name']
     email = request.form['email']
-    service = request.form['service']
+    doctor = request.form['doctor']
     date = request.form['date']
     time = request.form['time']
 
     with sqlite3.connect('appointments.db') as conn:
-        conn.execute('INSERT INTO appointments (name, email, service, date, time) VALUES (?, ?, ?, ?, ?)',
-                     (name, email, service, date, time))
+        conn.execute('INSERT INTO appointments (name, email, doctor, date, time) VALUES (?, ?, ?, ?, ?)',
+                     (name, email, doctor, date, time))
 
     # Send email confirmation
     msg = Message("Appointment Confirmation", recipients=[email])
-    msg.body = f"Hello {name},\n\nYour appointment for '{service}' has been successfully booked on {date} at {time}.\n\nThank you!"
+    msg.body = f"Hello {name},\n\nYour appointment with Dr. {doctor} has been successfully booked on {date} at {time}.\n\nThank you!"
     mail.send(msg)
 
-    flash('✅ Appointment booked successfully! A confirmation email has been sent.')
+    flash('Appointment booked successfully! A confirmation email has been sent.')
     return redirect(url_for('appointments'))
 
 @app.route('/appointments')
@@ -86,18 +85,18 @@ def edit(id):
         updated = (
             request.form['name'],
             request.form['email'],
-            request.form['service'],
+            request.form['doctor'],
             request.form['date'],
             request.form['time'],
             id
         )
         with sqlite3.connect('appointments.db') as conn:
             conn.execute('''
-                UPDATE appointments 
-                SET name=?, email=?, service=?, date=?, time=? 
+                UPDATE appointments
+                SET name=?, email=?, doctor=?, date=?, time=?
                 WHERE id=?
             ''', updated)
-        flash('✏️ Appointment updated successfully!')
+        flash('Appointment updated successfully!')
         return redirect(url_for('appointments'))
 
     with sqlite3.connect('appointments.db') as conn:
@@ -110,8 +109,14 @@ def edit(id):
 def delete(id):
     with sqlite3.connect('appointments.db') as conn:
         conn.execute('DELETE FROM appointments WHERE id=?', (id,))
-    flash('🗑️ Appointment deleted successfully!')
+    flash('Appointment deleted successfully!')
     return redirect(url_for('appointments'))
+
+# Route to manually import CSV data
+@app.route('/import')
+def import_data():
+    import_csv_to_db()
+    return "CSV Data Imported Successfully!"
 
 if __name__ == '__main__':
     app.run(debug=True)
