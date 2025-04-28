@@ -6,20 +6,24 @@ import csv
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
 
-# Mail configuration (example: Gmail SMTP)
+# Email configuration (assuming you use Gmail with App Password)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'ummadireddyvinithanjali@gmail.com'  # <-- your email
-app.config['MAIL_PASSWORD'] = 'udfvnhitqafmlzzg'     # <-- your app password
-app.config['MAIL_DEFAULT_SENDER'] = 'ummadireddyvinithanjali@gmail.com'
+app.config['MAIL_USERNAME'] = 'ummadireddyvinithanjali@gmail.com'  # Replace with your email
+app.config['MAIL_PASSWORD'] = 'udfvnhitqafmlzzg'     # Replace with your app password
+app.config['MAIL_DEFAULT_SENDER'] = 'ummadireddyvinithanjali@gmail.com'  # Replace with your email
 
 mail = Mail(app)
 
-# Initialize DB
+# Initialize DB and create the table if it doesn't exist
 def init_db():
     with sqlite3.connect('appointments.db') as conn:
-        conn.execute(''' 
+        # Drop the table if it already exists (useful for re-creating the schema)
+        conn.execute('DROP TABLE IF EXISTS appointments')
+        
+        # Create the table with the correct schema
+        conn.execute('''
             CREATE TABLE IF NOT EXISTS appointments (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
@@ -30,21 +34,21 @@ def init_db():
             );
         ''')
 
-# Function to import data from CSV to SQLite
+# Import CSV data into the database
 def import_csv_to_db():
-    with open('patients_dataset.csv', mode='r') as file:
-        csv_reader = csv.reader(file)
-        next(csv_reader)  # Skip the header row
-        
+    with open('patients_dataset.csv', 'r') as file:
+        reader = csv.DictReader(file)
         with sqlite3.connect('appointments.db') as conn:
-            for row in csv_reader:
-                name, email, doctor, date, time = row
-                conn.execute('''
+            cursor = conn.cursor()
+            for row in reader:
+                cursor.execute('''
                     INSERT INTO appointments (name, email, doctor, date, time)
                     VALUES (?, ?, ?, ?, ?)
-                ''', (name, email, doctor, date, time))
+                ''', (row['name'], row['email'], row['doctor'], row['date'], row['time']))
+            conn.commit()
 
-# Import the CSV data into the database (you can call this once or trigger it as needed)
+# Initialize DB and import CSV
+init_db()
 import_csv_to_db()
 
 @app.route('/')
@@ -65,7 +69,7 @@ def book():
 
     # Send email confirmation
     msg = Message("Appointment Confirmation", recipients=[email])
-    msg.body = f"Hello {name},\n\nYour appointment with Dr. {doctor} has been successfully booked on {date} at {time}.\n\nThank you!"
+    msg.body = f"Hello {name},\n\nYour appointment with Dr. {doctor} has been successfully booked on {date} at {time}.\n\nThank you!\n\n!!!See you soon!!!"
     mail.send(msg)
 
     flash('Appointment booked successfully! A confirmation email has been sent.')
@@ -92,9 +96,9 @@ def edit(id):
         )
         with sqlite3.connect('appointments.db') as conn:
             conn.execute('''
-                UPDATE appointments
-                SET name=?, email=?, doctor=?, date=?, time=?
-                WHERE id=?
+                UPDATE appointments 
+                SET name=?, email=?, doctor=?, date=?, time=? 
+                WHERE id=? 
             ''', updated)
         flash('Appointment updated successfully!')
         return redirect(url_for('appointments'))
@@ -111,12 +115,6 @@ def delete(id):
         conn.execute('DELETE FROM appointments WHERE id=?', (id,))
     flash('Appointment deleted successfully!')
     return redirect(url_for('appointments'))
-
-# Route to manually import CSV data
-@app.route('/import')
-def import_data():
-    import_csv_to_db()
-    return "CSV Data Imported Successfully!"
 
 if __name__ == '__main__':
     app.run(debug=True)
