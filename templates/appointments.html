@@ -1,50 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Appointments</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Appointments</title>
 </head>
 <body>
-<div class="container">
-    <h1>All Appointments</h1>
+    <h1>Appointments</h1>
 
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="flash">
-            {% for message in messages %}
-                <p>{{ message }}</p>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Patient Name</th>
+                <th>Email</th>
+                <th>Doctor</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appointment in appointments %}
+            <tr>
+                <td>{{ appointment[0] }}</td>
+                <td>{{ appointment[1] }}</td>
+                <td>{{ appointment[2] }}</td>
+                <td>{{ appointment[3] }}</td>
+                <td>{{ appointment[4] }}</td>
+                <td>{{ appointment[5] }}</td>
+                <td>
+                    <a href="{{ url_for('edit', id=appointment[0]) }}">Edit</a> |
+                    <a href="{{ url_for('delete', id=appointment[0]) }}">Delete</a>
+                </td>
+            </tr>
             {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
-
-    <table>
-        <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Service</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Actions</th>
-        </tr>
-        {% for a in appointments %}
-        <tr>
-            <td>{{ a[1] }}</td>
-            <td>{{ a[2] }}</td>
-            <td>{{ a[3] }}</td>
-            <td>{{ a[4] }}</td>
-            <td>{{ a[5] }}</td>
-            <td>
-                <a href="/edit/{{ a[0] }}">Edit</a> | 
-                <a href="/delete/{{ a[0] }}" onclick="return confirm('Are you sure?');">Delete</a>
-            </td>
-        </tr>
-        {% endfor %}
+        </tbody>
     </table>
 
-    <a href="/">← Book Another Appointment</a>
-</div>
+    <br>
+    <a href="{{ url_for('index') }}">Book New Appointment</a>
 </body>
 </html>
