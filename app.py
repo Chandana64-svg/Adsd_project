@@ -30,6 +30,24 @@ def init_db():
         ''')
 init_db()
 
+# Function to import data from CSV to SQLite
+def import_csv_to_db():
+    with open('patients_dataset.csv', mode='r') as file:
+        csv_reader = csv.reader(file)
+        next(csv_reader)  # Skip the header row
+        
+        with sqlite3.connect('appointments.db') as conn:
+            for row in csv_reader:
+                name, email, service, date, time = row
+                conn.execute('''
+                    INSERT INTO appointments (name, email, service, date, time)
+                    VALUES (?, ?, ?, ?, ?)
+                ''', (name, email, doctor, date, time))
+
+# Import the CSV data into the database (you can call this once or trigger it as needed)
+import_csv_to_db()
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
